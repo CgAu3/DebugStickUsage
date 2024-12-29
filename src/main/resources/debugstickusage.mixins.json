@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.abslb.debugstickusage.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "debugstickusage.refmap.json",
+  "mixins": [
+    "DebugStickMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
