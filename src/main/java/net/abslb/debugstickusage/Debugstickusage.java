@@ -1,43 +1,26 @@
 package net.abslb.debugstickusage;
 
 import com.mojang.logging.LogUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.DebugStickItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.MapColor;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -77,5 +60,60 @@ public class Debugstickusage {
         // Do something when the server starts
         LOGGER.info("Detected Server Started. Note that Debug Sticks will no longer require Permission Level to use.");
     }
+
+    @SubscribeEvent
+    public void onAttackBlock(PlayerInteractEvent.LeftClickBlock event){
+        if(event.getItemStack().getItem() instanceof DebugStickItem){
+            UUID playerUUID = event.getEntity().getUUID();
+            if(!playerTriggerMap.getOrDefault(playerUUID, false)
+                && !event.getLevel().isClientSide
+                && !event.isCanceled()){
+                Class<? extends Item> RDebugStickItem = event.getItemStack().getItem().getClass();
+                try{
+                    Method RhandleInteraction = RDebugStickItem.getDeclaredMethod(
+                        "handleInteraction",
+                        Player.class,
+                        BlockState.class,
+                        LevelAccessor.class,
+                        BlockPos.class,
+                        boolean.class,
+                        ItemStack.class
+                        );
+                    RhandleInteraction.setAccessible(true);
+                    RhandleInteraction.invoke(
+                        event.getItemStack().getItem(), //object
+                        event.getEntity(), //player
+                        event.getLevel().getBlockState(event.getPos()), //blockState
+                        (LevelAccessor)event.getLevel(), //level
+                        event.getPos(), //pos
+                        false,
+                        event.getEntity().getItemInHand(InteractionHand.MAIN_HAND)
+                    );
+                }
+                catch (Exception e){
+                    LOGGER.error("Unable to run Debug Stick handleInteraction.", e);
+                }
+                playerTriggerMap.put(playerUUID, true);
+                playerLastTriggerTimeMap.put(playerUUID, System.currentTimeMillis());
+                event.setCanceled(true);
+            }
+        }
+
+
+    }
+
+    @SubscribeEvent
+    public void onPlayerTick(PlayerTickEvent.Pre event){
+        UUID playerUUID = event.getEntity().getUUID();
+        if(playerTriggerMap.containsKey(playerUUID)){
+            if(playerLastTriggerTimeMap.containsKey(playerUUID)){
+                if(System.currentTimeMillis() - playerLastTriggerTimeMap.get(playerUUID) < 500)
+                    return;
+            }
+            playerTriggerMap.remove(playerUUID);
+            playerLastTriggerTimeMap.remove(playerUUID);
+        }
+    }
+
 
 }

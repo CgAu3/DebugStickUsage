@@ -1,12 +1,8 @@
 package net.abslb.debugstickusage.mixin;
 
-import net.abslb.debugstickusage.Config;
-import net.abslb.debugstickusage.Debugstickusage;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DebugStickItem;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,4 +24,20 @@ public class DebugStickMixin {
         return !instance.isSpectator();
     }
 
+    @Inject(
+        method = "canAttackBlock",
+        at = @At(
+            value = "HEAD"
+        ),
+        cancellable = true)
+    public void OnlyForInstabuild(BlockState state,
+                                  Level level,
+                                  BlockPos pos,
+                                  Player player,
+                                  CallbackInfoReturnable<Boolean> cir){
+        if(!player.getAbilities().instabuild){
+            cir.setReturnValue(false);
+            cir.cancel();
+        }
+    }
 }
