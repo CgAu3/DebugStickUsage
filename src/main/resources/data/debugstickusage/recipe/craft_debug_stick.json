@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "#": {"item": "minecraft:stick"},
+    "X": {"item": "minecraft:breeze_rod"},
+    "A": {"item": "minecraft:blaze_rod"},
+    "B": {"item": "minecraft:nautilus_shell"},
+    "C": {"item": "minecraft:carrot_on_a_stick"}
+  },
+  "pattern": [
+    "B A",
+    " # ",
+    "X C"
+  ],
+  "result": {
+    "count": 1,
+    "id": "minecraft:debug_stick"
+  }
+}
