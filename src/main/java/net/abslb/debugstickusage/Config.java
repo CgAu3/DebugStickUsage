@@ -18,16 +18,16 @@ import java.util.stream.Collectors;
 public class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    /*private static final ModConfigSpec.BooleanValue ALLOW_ADVENTRUE_MODE =
-        BUILDER.comment("Whether Adventure Mode players can use debug stick")
-            .define("AllowAdventureMode", true);
+    private static final ModConfigSpec.BooleanValue ALLOW_TURTLE_EGGS =
+        BUILDER.comment("Whether Survival Mode players can debug turtle egg counts")
+            .define("AllowTurtleEggs", true);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
-    public static boolean allowAdventureMode;
-    */
+    public static boolean allowTurtuleEggs;
+
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
-        //allowAdventureMode = ALLOW_ADVENTRUE_MODE.get();
+        allowTurtuleEggs = ALLOW_TURTLE_EGGS.get();
     }
 }

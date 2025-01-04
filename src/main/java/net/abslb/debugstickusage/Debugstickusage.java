@@ -2,23 +2,33 @@ package net.abslb.debugstickusage;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DebugStickItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DebugStickState;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
+
+import dev.dubhe.anvilcraft.block.AbstractMultiplePartBlock;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -47,7 +57,7 @@ public class Debugstickusage {
         NeoForge.EVENT_BUS.register(this);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        //modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -115,5 +125,34 @@ public class Debugstickusage {
         }
     }
 
+    @SubscribeEvent
+    public void onPlayerRightClickJudgeBlackList(PlayerInteractEvent.RightClickBlock event){
+        if(event.getItemStack().getItem() instanceof DebugStickItem
+            && !event.getEntity().canUseGameMasterBlocks()){
+            BlockState state = event.getLevel().getBlockState(event.getPos());
+            DebugStickState debugstickstate =
+                (DebugStickState) event.getItemStack().get(DataComponents.DEBUG_STICK_STATE);
+            Holder<Block> holder = state.getBlockHolder();
+            if (debugstickstate != null) {
+                Property<?> property = debugstickstate.properties().get(holder);
+                if(!Config.allowTurtuleEggs){
+                    if( (state.is(Blocks.TURTLE_EGG) && property == null)
+                        ||(property ==  BlockStateProperties.EGGS) ){
+                        event.setCanceled(true);
+                        return;
+                    }
+                }
+                if (state.getBlock() instanceof AbstractMultiplePartBlock){
+                    if(property == null || property.getName().toLowerCase().matches("half")
+                        || property.getName().toLowerCase().matches("cube")){
+                        event.setCanceled(true);
+                        return;
+                    }
+                }
+                int x = 1;
+                x += 1;
+            }
+        }
+    }
 
 }

@@ -102,6 +102,12 @@ dependencies {
     // compileOnly "mezz.jei:jei-${mc_version}-forge-api:${jei_version}"
     // runtimeOnly "mezz.jei:jei-${mc_version}-forge:${jei_version}"
 
+    // 编译时依赖AnC，仅用于开发阶段
+    compileOnly files("libs/anvilcraft-neoforge-1.21.1-1.4.2+pr.1179.jar")
+
+    // 如果你需要运行环境中加载AnC
+    runtimeOnly files("libs/anvilcraft-neoforge-1.21.1-1.4.2+pr.1179.jar")
+
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
     // The group id is ignored when searching -- in this case, it is "blank"
